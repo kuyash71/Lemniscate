@@ -15,7 +15,7 @@ from src.core.models import MissionConfig
 
 GITHUB_URL   = "https://github.com/kuyash71/Lemniscate"
 PANEL_WIDTH  = 300
-LOGO_MAX_W   = int(PANEL_WIDTH * 0.78)
+LOGO_MAX_W   = int(PANEL_WIDTH * 0.88)
 LOGO_MAX_H   = 110
 
 
@@ -55,19 +55,27 @@ class ParameterPanel(QWidget):
     def _make_logo_bar(self) -> QWidget:
         bar = QWidget()
         bar.setObjectName("logoBar")
-        bar.setStyleSheet(
-            "#logoBar { border-bottom: 1px solid rgba(128,128,128,0.2); }"
-        )
+        bar.setStyleSheet("#logoBar { border-bottom: 1px solid rgba(128,128,128,0.2); }")
 
         self._logo_label = QLabel(alignment=Qt.AlignmentFlag.AlignCenter)
         self._logo_label.setSizePolicy(
             QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
         )
 
+        self._logo_text = QLabel("LEMNISCATE")
+        self._logo_text.setObjectName("logoText")
+        self._logo_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        col = QVBoxLayout()
+        col.setContentsMargins(0, 0, 0, 0)
+        col.setSpacing(4)
+        col.addWidget(self._logo_label)
+        col.addWidget(self._logo_text)
+
         layout = QHBoxLayout(bar)
-        layout.setContentsMargins(0, 8, 0, 8)
+        layout.setContentsMargins(0, 8, 0, 10)
         layout.addStretch()
-        layout.addWidget(self._logo_label)
+        layout.addLayout(col)
         layout.addStretch()
         return bar
 
@@ -83,7 +91,6 @@ class ParameterPanel(QWidget):
         title = QLabel("Mission Parameters")
         title.setObjectName("sectionTitle")
         lo.addWidget(title)
-        lo.addWidget(self._hsep())
 
         form = QFormLayout()
         form.setSpacing(8)
@@ -103,11 +110,11 @@ class ParameterPanel(QWidget):
 
         self._orientation = self._dspin(-9999, 9999, c.default_orientation, 1)
         self._orientation_norm = QLabel(f"{c.default_orientation % 360:.1f}°")
+        self._orientation_norm.setObjectName("accentLabel")
         self._orientation_norm.setFixedWidth(44)
         self._orientation_norm.setAlignment(
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         )
-        self._orientation_norm.setStyleSheet("color: #00d4ff; font-size: 12px;")
 
         ori_row = QHBoxLayout()
         ori_row.setSpacing(6)
@@ -127,8 +134,6 @@ class ParameterPanel(QWidget):
         self._low_alt_warning.setObjectName("warningLabel")
         self._low_alt_warning.setVisible(False)
         lo.addWidget(self._low_alt_warning)
-
-        lo.addWidget(self._hsep())
 
         self._btn_generate = QPushButton("Generate")
         self._btn_generate.setObjectName("primaryButton")
@@ -154,11 +159,8 @@ class ParameterPanel(QWidget):
 
     def _make_bottom_bar(self) -> QWidget:
         bar = QWidget()
-        bar.setFixedHeight(52)
         bar.setObjectName("bottomBar")
-        bar.setStyleSheet(
-            "#bottomBar { border-top: 1px solid rgba(128,128,128,0.2); }"
-        )
+        bar.setStyleSheet("#bottomBar { border-top: 1px solid rgba(128,128,128,0.2); }")
 
         self._theme_btn = self._icon_btn("🌙", "Toggle dark / light mode")
         self._theme_btn.clicked.connect(self._on_theme_toggle)
@@ -202,6 +204,7 @@ class ParameterPanel(QWidget):
 
     def _hsep(self) -> QFrame:
         line = QFrame()
+        line.setObjectName("separator")
         line.setFrameShape(QFrame.Shape.HLine)
         line.setFrameShadow(QFrame.Shadow.Sunken)
         return line

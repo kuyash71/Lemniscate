@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QDialog, QFormLayout, QDoubleSpinBox, QSpinBox, QComboBox, QCheckBox, QPushButton, QVBoxLayout, QHBoxLayout
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QDialog, QFormLayout, QDoubleSpinBox, QSpinBox, QComboBox, QCheckBox, QPushButton, QVBoxLayout, QHBoxLayout, QLabel
+from PyQt6.QtCore import pyqtSignal, Qt
 from src.core.config import AppConfig, save
 
 
@@ -47,9 +47,14 @@ class SettingsPanel(QDialog):
         buttons.addWidget(save_btn)
         buttons.addWidget(cancel_btn)
 
+        sig = QLabel("by kuyash71")
+        sig.setObjectName("signatureLabel")
+        sig.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         layout.addLayout(buttons)
+        layout.addWidget(sig)
 
         self._load_values()
         save_btn.clicked.connect(self._save)

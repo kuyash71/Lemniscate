@@ -62,15 +62,15 @@
   <script>
     const osmLayer = L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-      { attribution: "© OpenStreetMap contributors", maxZoom: 20 }
+      { attribution: "© OpenStreetMap contributors", maxZoom: 40, maxNativeZoom: 19 }
     );
 
     const satelliteLayer = L.tileLayer(
       "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      { attribution: "© Esri", maxZoom: 20 }
+      { attribution: "© Esri", maxZoom: 22, maxNativeZoom: 18 }
     );
 
-    const map = L.map("map", { layers: [satelliteLayer] }).setView([39.9, 32.8], 15);
+    const map = L.map("map", { layers: [satelliteLayer] }).setView([40.7431, 30.3302], 15);
 
     L.control.layers(
       { "Satellite": satelliteLayer, "Street": osmLayer },
@@ -101,7 +101,7 @@
         .addTo(lemniscateLayer);
       });
 
-      map.fitBounds(L.polyline(latlngs).getBounds(), { padding: [60, 60] });
+      map.fitBounds(L.polyline(latlngs).getBounds(), { padding: [60, 60], maxZoom: 18 });
     }
 
     function drawImportedMission(waypoints) {
