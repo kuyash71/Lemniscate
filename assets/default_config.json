@@ -1,0 +1,14 @@
+{
+  "default_lat": 39.9,
+  "default_lon": 32.8,
+  "default_altitude": 30.0,
+  "default_semi_locus": 50.0,
+  "default_orientation": 0.0,
+  "default_n_waypoints": 36,
+  "default_speed": 0.0,
+  "tile_layer": "satellite",
+  "include_takeoff": true,
+  "include_rtl": true,
+  "leaflet_local": false,
+  "theme": "dark"
+}

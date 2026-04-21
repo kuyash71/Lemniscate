@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LEMNISCATE Map</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #map { width: 100%; height: 100%; background: #0d0d1a; }
+
+    .wp-label {
+      background: transparent;
+      border: none;
+      color: #ccc;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .ctx-menu {
+      border-radius: 8px;
+      padding: 4px 0;
+      min-width: 160px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 13px;
+      background: var(--ctx-bg, #13132a);
+      border: 1px solid var(--ctx-border, #2a2a50);
+    }
+    .ctx-menu button {
+      display: block;
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--ctx-color, #e0e0f0);
+      padding: 8px 16px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .ctx-menu button:hover {
+      background: var(--ctx-hover, #1a1a40);
+      color: var(--ctx-accent, #00d4ff);
+    }
+
+    /* Light mode overrides injected from Python */
+    body.light .ctx-menu {
+      --ctx-bg: #ffffff;
+      --ctx-border: #d1d5db;
+      --ctx-color: #111827;
+      --ctx-hover: #eff6ff;
+      --ctx-accent: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    const osmLayer = L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      { attribution: "© OpenStreetMap contributors", maxZoom: 20 }
+    );
+
+    const satelliteLayer = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      { attribution: "© Esri", maxZoom: 20 }
+    );
+
+    const map = L.map("map", { layers: [satelliteLayer] }).setView([39.9, 32.8], 15);
+
+    L.control.layers(
+      { "Satellite": satelliteLayer, "Street": osmLayer },
+      {},
+      { position: "topright" }
+    ).addTo(map);
+
+    let lemniscateLayer = null;
+    let importedLayer   = null;
+
+    function drawLemniscate(points) {
+      if (lemniscateLayer) map.removeLayer(lemniscateLayer);
+      if (!points || points.length === 0) return;
+
+      lemniscateLayer = L.layerGroup().addTo(map);
+
+      const latlngs = points.map(p => [p.lat, p.lon]);
+      latlngs.push(latlngs[0]);
+
+      L.polyline(latlngs, { color: "#00d4ff", weight: 2.5, opacity: 0.9 })
+        .addTo(lemniscateLayer);
+
+      points.forEach((p, i) => {
+        L.circleMarker([p.lat, p.lon], {
+          radius: 4, color: "#00d4ff", fillColor: "#fff", fillOpacity: 1, weight: 2
+        })
+        .bindTooltip(`WP ${i + 1}`, { permanent: false })
+        .addTo(lemniscateLayer);
+      });
+
+      map.fitBounds(L.polyline(latlngs).getBounds(), { padding: [60, 60] });
+    }
+
+    function drawImportedMission(waypoints) {
+      if (importedLayer) map.removeLayer(importedLayer);
+      if (!waypoints || waypoints.length === 0) return;
+
+      importedLayer = L.layerGroup().addTo(map);
+
+      const latlngs = waypoints
+        .filter(w => w.lat !== 0 || w.lon !== 0)
+        .map(w => [w.lat, w.lon]);
+
+      if (latlngs.length > 1) {
+        L.polyline(latlngs, { color: "#888", weight: 2, dashArray: "6 4", opacity: 0.7 })
+          .addTo(importedLayer);
+      }
+
+      waypoints
+        .filter(w => w.lat !== 0 || w.lon !== 0)
+        .forEach(w => {
+          L.circleMarker([w.lat, w.lon], {
+            radius: 5, color: "#888", fillColor: "#ccc", fillOpacity: 1, weight: 2
+          })
+          .bindTooltip(`#${w.index}`, { permanent: true, className: "wp-label" })
+          .addTo(importedLayer);
+        });
+    }
+
+    function panTo(lat, lon) {
+      map.setView([lat, lon], map.getZoom());
+    }
+
+    let _bridge = null;
+
+    new QWebChannel(qt.webChannelTransport, function (channel) {
+      _bridge = channel.objects.bridge;
+    });
+
+    // ── Context menu ──────────────────────────────────────────────────
+    let _ctxPopup = null;
+
+    map.on('contextmenu', function (e) {
+      if (_ctxPopup) { _ctxPopup.remove(); _ctxPopup = null; }
+
+      const lat = e.latlng.lat;
+      const lon = e.latlng.lng;
+
+      const container = document.createElement('div');
+      container.className = 'ctx-menu';
+
+      const btn = document.createElement('button');
+      btn.textContent = '📍  Set as center';
+      btn.onclick = function () {
+        if (_bridge) _bridge.set_center_from_map(lat, lon);
+        _ctxPopup.remove();
+        _ctxPopup = null;
+      };
+
+      container.appendChild(btn);
+
+      _ctxPopup = L.popup({ closeButton: false, className: 'ctx-popup' })
+        .setLatLng(e.latlng)
+        .setContent(container)
+        .openOn(map);
+    });
+
+    map.on('click', function () {
+      if (_ctxPopup) { _ctxPopup.remove(); _ctxPopup = null; }
+    });
+  </script>
+</body>
+</html>
