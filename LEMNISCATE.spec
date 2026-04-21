@@ -29,7 +29,13 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['matplotlib', 'tkinter', 'unittest'],
+    excludes=[
+        'matplotlib', 'tkinter', 'unittest', 'test', 'email', 'html',
+        'http', 'urllib', 'xml', 'xmlrpc', 'pydoc', 'doctest',
+        'difflib', 'ftplib', 'imaplib', 'poplib', 'smtplib',
+        'telnetlib', 'logging', 'multiprocessing', 'concurrent',
+        'asyncio', 'ctypes.test', 'lib2to3',
+    ],
     noarchive=False,
 )
 
@@ -38,23 +44,15 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
+    a.binaries,
+    a.datas,
     [],
-    exclude_binaries=True,
     name='LEMNISCATE',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
+    strip=True,
     upx=True,
+    upx_exclude=['QtWebEngineCore', 'QtWebEngineWidgets'],
     console=False,
     icon=icon,
-)
-
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name='LEMNISCATE',
 )
