@@ -13,8 +13,10 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact: LEMNISCATE-linux
+            binary: LEMNISCATE
           - os: windows-latest
             artifact: LEMNISCATE-windows
+            binary: LEMNISCATE.exe
 
     runs-on: ${{ matrix.os }}
 
@@ -47,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: dist/LEMNISCATE/
+          path: dist/${{ matrix.binary }}
 
   release:
     needs: build
@@ -59,22 +61,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: LEMNISCATE-linux
-          path: dist/linux
+          path: dist/
 
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
           name: LEMNISCATE-windows
-          path: dist/windows
-
-      - name: Zip artifacts
-        run: |
-          cd dist && zip -r LEMNISCATE-linux.zip linux/
-          cd dist && zip -r LEMNISCATE-windows.zip windows/
+          path: dist/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/LEMNISCATE-linux.zip
-            dist/LEMNISCATE-windows.zip
+            dist/LEMNISCATE
+            dist/LEMNISCATE.exe
